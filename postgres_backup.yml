@@ -1,0 +1,84 @@
+- name: Backup Postgres Database
+  hosts: all #targets webservers group on /etc/ansible/hosts
+  # remote_user: root
+  gather_facts: yes
+  remote_user: ubuntu
+
+  tasks:
+  - name: Set backup_dir and db_dump_name variable
+    set_fact:
+      backup_dir: /home/ubuntu/cycle-city-prod-backups
+      db_dump_name: cyclecity_db-{{ ansible_date_time.date }}.tar.gz
+
+  - name: Creates directory
+    file:
+      path: /home/ubuntu/cyclecity_backend_db_backup
+      state: directory
+      
+
+  - name: ensure file exists
+    copy:
+      content: ""
+      dest: /home/ubuntu/cyclecity_backend_db_backup/{{ db_dump_name }}
+      force: no
+      # group: ubuntu
+      # owner: ubuntu
+      # mode: 0555
+
+  - name: Create Directory on Container and empty old backups inside container
+    command: |
+        docker exec cycle-app-greenway-backend_cycle-db_1 mkdir -p /var/lib/postgresql/data/cyclecity_backend_db_backup
+
+  - name: empty old backups inside container
+    command: |
+        docker exec cycle-app-greenway-backend_cycle-db_1 rm -rf /var/lib/postgresql/data/cyclecity_backend_db_backup/*
+
+  - name: Dump the DB to a bind-mounted volume
+    command: |
+        docker exec cycle-app-greenway-backend_cycle-db_1 pg_dump -Ft --dbname=cycle_prod_db -U cycle_prod_user -f /var/lib/postgresql/data/cyclecity_backend_db_backup/{{ db_dump_name }}
+
+  - name: Copy Dump to host Backup Folder
+    become: true
+    command: |
+        cp /home/ubuntu/project/cycle-app-greenway-backend/postgres_data/cyclecity_backend_db_backup/{{ db_dump_name }} /home/ubuntu/cyclecity_backend_db_backup/
+
+  - name: "Check if AWS CLI is installed"
+    stat:
+      path: "/usr/local/bin/aws"
+    register: result
+    
+  - name: "Do nothing if AWS CLI is installed"
+    when: result.stat.exists
+    command: echo AWS is preinstalled
+    
+  - name: "Install AWS CLI if not installed"
+    when: not result.stat.exists
+    become: true
+    command: cd ~
+    command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    command: unzip awscliv2.zip
+    command: ./aws/install
+    
+
+    #[x] verify is aws cli is installed 
+    #[x] if not install aws cli
+    #[] aws cli -- pass temporary credentials
+    #[] move backup to s3 and delete local
+    #[] clean s3 old backup files
+
+    #[] backup env and media files
+
+    #[] learn about borg backup
+
+
+
+#     [1] ON NAXA WIKI
+# - Server
+# - Development and Production
+# - Repo [Branch for dev and prod]
+# - path
+# - JOB URL
+# -
+
+# [2] Learn KUBERNETES
+# [3] Learn Ansible

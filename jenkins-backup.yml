@@ -1,0 +1,16 @@
+- name: Testing Ansible
+  hosts: webservers #targets webservers group on /etc/ansible/hosts
+  # remote_user: root
+
+  tasks:
+  - name: Copying the Node Exporter Directory's contents to Hosts (sub directories/files)
+    # become: true
+    copy:
+      src: ~/naxa/ansible/node-exporter/
+      dest: ~/node-exporter
+  - name: Create Docker Container For Node Exporter
+    # become: true
+    command: "cd ~/node-exporter"
+    command: "docker-compose up -d"
+  # - name: DOCker PS
+  #   command: "touch ansible_created_file.txt"

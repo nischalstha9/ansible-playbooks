@@ -1,0 +1,5 @@
+all:
+  hosts:
+    remote-server:
+      ansible_ssh_host: 139.59.67.104
+      ansible_ssh_user: nischal
