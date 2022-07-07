@@ -1,0 +1,11 @@
+- name: Delete Remote User
+  hosts: remote-server
+  become: yes
+  vars:
+    - user: new_demo_user
+  tasks:
+  - name: Delete User
+    ansible.builtin.user:
+      name: "{{user}}"
+      state: "absent"
+      remove: true

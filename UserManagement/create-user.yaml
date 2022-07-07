@@ -6,13 +6,16 @@
   become: yes
   vars:
     - user: new_demo_user
-    - password: admin
+    - password: demo
+    - comment: "John Doe, 98123123123"
 
   tasks:
   - name: Create a login user
     user:
       name: "{{ user }}"
       password: "{{ password | password_hash('sha512') }}"
+      shell: /bin/bash
+      comment: "{{comment}}"
       groups:
         - sudo
       state: present
