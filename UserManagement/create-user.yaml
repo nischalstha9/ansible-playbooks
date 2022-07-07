@@ -7,7 +7,8 @@
   vars:
     - user: new_demo_user
     - password: demo
-    - comment: "John Doe, 98123123123"
+    - comment: "John Doe,,98123123123,,Developer"
+    - addSSHKey: true
 
   tasks:
   - name: Create a login user
@@ -19,3 +20,12 @@
       groups:
         - sudo
       state: present
+
+  - name: Add public key to authorized_keys
+    authorized_key:
+      user: "{{ user }}"
+      state: present
+      key: '{{ item }}'
+    with_file:
+    - ~/.ssh/id_rsa.pub
+    when: addSSHKey

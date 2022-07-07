@@ -14,22 +14,22 @@
     with_file:
     - ~/.ssh/id_rsa.pub
 
-  - name: "get the file content"
-    slurp:
-      src: "/etc/ssh/sshd_config_bak"
-    register: file
+  # - name: "get the file content"
+  #   slurp:
+  #     src: "/etc/ssh/sshd_config"
+  #   register: file
 
-  - name: "fetch the right line"
-    set_fact:
-      line: "{{ file['content'] | b64decode | regex_search('AllowUsers.*')}}"
+  # - name: "fetch the right line"
+  #   set_fact:
+  #     line: "{{ file['content'] | b64decode | regex_search('AllowUsers.*')}}"
 
-  - name: "extract the users"
-    set_fact:
-      allowed_users: "{{ line.split()[1:-1] }}"
+  # - name: "extract the users"
+  #   set_fact:
+  #     allowed_users: "{{ line.split()[1:-1] }}"
 
-  - name: "add the group"
-    replace:
-      path: "/etc/ssh/sshd_config_bak"
-      regexp: '(AllowUsers.*)(\!\*)'
-      replace: '\1 {{ user }} !*'
-    when: user not in allowed_users
+  # - name: "add the user"
+  #   replace:
+  #     path: "/etc/ssh/sshd_config"
+  #     regexp: '(AllowUsers.*)(\!\*)'
+  #     replace: '\1 {{ user }} !*'
+  #   when: user not in allowed_users
