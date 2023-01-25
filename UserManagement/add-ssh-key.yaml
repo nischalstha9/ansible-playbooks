@@ -1,8 +1,9 @@
 - name: Add SSH Key
-  hosts: remote-server
+  hosts: sakchyam
   become: yes
   vars:
-    - user: new_demo_user
+    - user: ubuntu
+    - item: "ssh-ed25519 AA SumitNew"
 
   tasks:
   - name: Add public key to authorized_keys
@@ -11,8 +12,8 @@
       state: present
       key: '{{ item }}'
     # key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-    with_file:
-    - ~/.ssh/id_rsa.pub
+    # with_file:
+    # - ~/.ssh/cibot_naxa.pem
 
   # - name: "get the file content"
   #   slurp:

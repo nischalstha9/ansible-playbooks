@@ -1,0 +1,134 @@
+- hosts: new_server
+  become: true
+  vars:
+    created_username: ubuntu
+
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Setup passwordless sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%sudo'
+        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'
+
+    - name: Create a new regular user with sudo privileges
+      user:
+        name: "{{ created_username }}"
+        state: present
+        groups: sudo
+        append: true
+        create_home: true
+    
+    - name: Set authorized key for remote user
+      ansible.posix.authorized_key:
+        user: "{{ created_username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+    - name: Make user accessible by naxa-ci (Jenkins)
+      ansible.posix.authorized_key:
+        user: "{{ created_username }}"
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/cibot_naxa.pub') }}"
+
+    - name: Add NAXA Github SSH Key
+      ansible.builtin.template:
+        src: ./git/git_ssh
+        dest: /home/{{ created_username }}/.ssh/git_ssh
+        owner: "{{ created_username }}"
+        group: "{{ created_username }}"
+        mode: '0600'
+
+    - name: Create SSH config file
+      ansible.builtin.template:
+        src: ./git/config
+        dest: /home/{{ created_username }}/.ssh/config
+        owner: "{{ created_username }}"
+        group: "{{ created_username }}"
+        mode: '0600'
+
+    - name: Disable password authentication for root
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PermitRootLogin'
+        # line: 'PermitRootLogin prohibit-password' #if you want to disable password login for root
+        line: 'PermitRootLogin no' #if you want to disable login for root
+
+    - name: Disable password authentication for all Users
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+
+    - name: Update apt and install required system packages
+      apt:
+        pkg:
+          - curl
+          - vim
+          - git
+          - ufw
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+          - lsb-release
+          - gnupg
+          - htop
+          - nginx
+        state: latest
+        update_cache: true
+
+    # - name: UFW - Allow SSH connections
+    #   community.general.ufw:
+    #     rule: allow
+    #     name: OpenSSH
+
+    # - name: UFW - Enable and deny by default
+    #   community.general.ufw:
+    #     state: enabled
+    #     default: deny
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        pkg:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+          - docker # docker module for python
+        state: latest
+        update_cache: true
+
+    - name: Create docker group
+      group:
+        name: docker
+        state: present
+
+    - name: adding existing user to group docker
+      user:
+        name: "{{ created_username }}"
+        groups: docker
+        append: yes
+

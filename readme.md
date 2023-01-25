@@ -1,3 +1,5 @@
+`ansible-galaxy collection install ansible.posix` before running script
+
 `ansible-playbook MyTask.yml -K`
 
 ```

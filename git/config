@@ -1,0 +1,9 @@
+Host github.com
+  HostName github.com
+  User jenkins
+  IdentityFile /home/{{ created_username }}/.ssh/git_ssh
+
+Host gitlab.com
+  HostName gitlab.com
+  User jenkins
+  IdentityFile /home/{{ created_username }}/.ssh/git_ssh
